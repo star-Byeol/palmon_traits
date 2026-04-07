@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐾 팰몬 특성 등록</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      max-width: 100%;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: white;
+      margin-bottom: 20px;
+      font-size: 2em;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .tab-button {
+      flex: 1;
+      min-width: 140px;
+      padding: 14px 12px;
+      border: none;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.25);
+      color: white;
+      font-size: 15px;
+      font-weight: 700;
+      backdrop-filter: blur(8px);
+      cursor: pointer;
+    }
+
+    .tab-button.active {
+      background: white;
+      color: #5b4fd4;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .form-section {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .section-title {
+      font-size: 1.2em;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 18px;
+    }
+
+    .field-label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #e1e5e9;
+      border-radius: 12px;
+      font-size: 16px;
+      background: #f8f9fa;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #667eea;
+      outline: none;
+      background: white;
+    }
+
+    .save-button, .search-button, .request-button, .alias-button {
+      width: 100%;
+      padding: 15px 20px;
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 15px;
+      cursor: pointer;
+    }
+
+    .save-button { background: linear-gradient(45deg, #28a745, #20c997); }
+    .search-button { background: linear-gradient(45deg, #007bff, #0056b3); }
+    .request-button { background: linear-gradient(45deg, #ff7b54, #ff5c8a); }
+    .alias-button { background: linear-gradient(45deg, #6f42c1, #8b5cf6); margin-top: 10px; }
+
+    .selected-traits-box {
+      min-height: 56px;
+      border: 2px solid #e1e5e9;
+      border-radius: 12px;
+      background: #f8f9fa;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .placeholder-text {
+      color: #999;
+      font-size: 14px;
+    }
+
+    .trait-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .trait-chip button {
+      border: none;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-size: 14px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .dropdown-wrapper,
+    .input-clear-wrap {
+      position: relative;
+    }
+
+    #traitSearch,
+    #aliasInput {
+      padding-right: 42px;
+    }
+
+    .input-clear-btn {
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.04);
+      color: #888;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      display: none;
+      z-index: 30;
+    }
+
+    .input-clear-btn:hover {
+      background: rgba(0,0,0,0.08);
+      color: #444;
+    }
+
+    .dropdown-list {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      max-height: 260px;
+      overflow-y: auto;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      border: 1px solid #e5e7eb;
+      z-index: 20;
+      padding: 8px;
+    }
+
+    .dropdown-list.show { display: block; }
+
+    .dropdown-item {
+      padding: 12px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      color: #333;
+      font-size: 15px;
+      position: relative;
+    }
+
+    .dropdown-item:hover { background: #f3f4f6; }
+    .dropdown-item.disabled { color: #aaa; cursor: not-allowed; }
+
+    .helper-text {
+      margin-top: 8px;
+      color: #666;
+      font-size: 13px;
+    }
+
+    .result {
+      background: rgba(255,255,255,0.95);
+      border-radius: 15px;
+      padding: 20px;
+      margin: 15px 0;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      position: relative;
+    }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .owner-name {
+      font-size: 1em;
+      color: #333;
+      font-weight: 700;
+    }
+
+    .owner-sub {
+      font-size: 12px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .icon-action {
+      border: none;
+      background: #fff3f0;
+      color: #ff6b57;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .trait-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .small-chip {
+      background: #eef2ff;
+      color: #4f46e5;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .tooltip-target {
+      position: relative;
+    }
+
+    .rich-tooltip {
+      display: none;
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 8px);
+      transform: translateX(-50%);
+      min-width: 220px;
+      max-width: 300px;
+      background: #222;
+      color: white;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.5;
+      z-index: 60;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      white-space: normal;
+    }
+
+    .empty-box {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      padding: 30px 10px;
+    }
+
+    .detail-toggle {
+      margin-top: 12px;
+      border-top: 1px solid #ececec;
+      padding-top: 10px;
+    }
+
+    .detail-toggle summary {
+      cursor: pointer;
+      color: #5b4fd4;
+      font-weight: 700;
+      font-size: 14px;
+      list-style: none;
+    }
+
+    .detail-toggle summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .detail-content {
+      margin-top: 10px;
+    }
+
+    .detail-row {
+      margin-top: 6px;
+      color: #555;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 14px; }
+      h1 { font-size: 1.5em; }
+      .nav-tabs { flex-direction: column; }
+      .tab-button { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🐾 팰몬 특성 등록</h1>
+
+    <div class="nav-tabs">
+      <button class="tab-button active" onclick="showTab('register', this)">특성 등록창</button>
+      <button class="tab-button" onclick="showTab('search', this)">특성 검색창</button>
+      <button class="tab-button" onclick="showTab('request', this)">수정 요청창</button>
+      <button class="tab-button" onclick="showTab('recommend', this)">추천 특성창</button>
+    </div>
+
+    <div id="register" class="tab-content active">
+      <div class="form-section">
+        <div class="section-title">📝 특성 등록창</div>
+
+        <label class="field-label" for="owner">닉네임</label>
+        <input id="owner" placeholder="게임 내 닉네임을 입력해 주세요">
+
+        <div style="height: 16px;"></div>
+
+        <label class="field-label" for="aliasInput">약칭으로 등록</label>
+        <div class="input-clear-wrap">
+          <input id="aliasInput" type="search" placeholder="예: 방방체체, 공치치치, 나무" autocomplete="off">
+          <button type="button" id="aliasClearBtn" class="input-clear-btn" aria-label="약칭 입력 지우기">×</button>
+        </div>
+        <button class="alias-button" type="button" onclick="applyAliasCode()">⚡ 약칭 적용</button>
+
+        <div style="height: 16px;"></div>
+
+        <label class="field-label">선택한 특성</label>
+        <div id="selectedTraitsBox" class="selected-traits-box">
+          <span class="placeholder-text">아직 선택한 특성이 없습니다 (최대 4개)</span>
+        </div>
+
+        <label class="field-label" for="traitSearch">특성 검색 / 선택</label>
+        <div class="dropdown-wrapper input-clear-wrap">
+          <input id="traitSearch" type="search" placeholder="특성을 검색하거나 목록에서 선택해 주세요" autocomplete="off">
+          <button type="button" id="traitSearchClear" class="input-clear-btn" aria-label="특성 검색 지우기">×</button>
+          <div id="dropdownList" class="dropdown-list"></div>
+        </div>
+
+        <div class="helper-text">특성의 이름 또는 공격, 방어 등으로 검색 가능합니다.</div>
+        <div class="helper-text">설명은 마우스 올리기 / 클릭 / 모바일 길게 누르기로 확인할 수 있습니다.</div>
+
+        <button class="save-button" onclick="savePalmon()">💾 등록하기</button>
+        <div id="saveMessage" class="helper-text" style="margin-top:12px;"></div>
+      </div>
+    </div>
+
+    <div id="search" class="tab-content">
+      <div class="form-section">
+        <div class="section-title">🔍 특성 검색창</div>
+        <label class="field-label" for="searchInput">검색할 특성</label>
+        <input id="searchInput" placeholder="예: 용맹한 마음, 방방체체">
+        <div class="helper-text">쉼표(,)로 여러 개 검색 가능</div>
+        <button class="search-button" onclick="searchPalmon()">🔍 검색하기</button>
+      </div>
+
+      <div id="results"></div>
+    </div>
+
+    <div id="request" class="tab-content">
+      <div class="form-section" id="requestSection">
+        <div class="section-title">📮 수정 요청창</div>
+
+        <label class="field-label" for="requestName">요청자 이름</label>
+        <input id="requestName" placeholder="닉네임">
+
+        <div style="height:12px;"></div>
+
+        <label class="field-label" for="requestType">요청 종류</label>
+        <select id="requestType">
+          <option value="수정">수정</option>
+          <option value="삭제">삭제</option>
+          <option value="오류 제보">오류 제보</option>
+          <option value="추가 의견">추가 의견</option>
+        </select>
+
+        <div style="height:12px;"></div>
+
+        <label class="field-label" for="requestPalId">대상 팰몬 ID</label>
+        <input id="requestPalId" placeholder="예: 닉네임_003">
+
+        <div style="height:12px;"></div>
+
+        <label class="field-label" for="requestMessage">내용</label>
+        <textarea id="requestMessage" placeholder="수정하거나 제보할 내용을 적어 주세요"></textarea>
+
+        <button class="request-button" type="button" onclick="submitGlobalRequest()">📨 요청 보내기</button>
+        <div id="requestResult" class="helper-text" style="margin-top:10px;"></div>
+
+        <div class="helper-text">검색 결과 카드의 ⚑ 버튼을 누르면 이 요청창으로 자동 이동합니다.</div>
+      </div>
+    </div>
+
+    <div id="recommend" class="tab-content">
+      <div class="form-section">
+        <div class="section-title">⭐ 추천 특성창</div>
+
+        <label class="field-label" for="recommendSearchInput">팰몬 / 타입 / 세트 검색</label>
+        <input id="recommendSearchInput" type="search" placeholder="검색하기">
+
+        <div class="helper-text">팰몬 이름이나 타입 검색 가능합니다. 로딩이 오래 걸릴 수 있으니 양해 바랍니다.</div>
+        <div class="helper-text">기본 표시는 타입 - 특성 형식이며, 자세히 보기에서 노트/팰몬을 확인할 수 있습니다.</div>
+
+        <div id="recommendWarnings"></div>
+        <div id="recommendResults"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const APPS_SCRIPT_URL = '://script.google.com/macros/s/AKfycbyyXIeGk2JtDqdky9I6VTwGpMmbq1PteS99Cn58sw9J5j0zOhMfio33M8CdFCUtm8p5/https://script.google.com/macros/s/AKfycbyyXIeGk2JtDqdky9I6VTwGpMmbq1PteS99Cn58sw9J5j0zOhMfio33M8CdFCUtm8p5/exec';
+
+    let TRAITS = [];
+    let selectedTraits = [];
+    let ALL_RECOMMENDATIONS = [];
+    let ALL_RECOMMEND_WARNINGS = [];
+
+    function showTab(tabId, button) {
+  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+  document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+
+  document.getElementById(tabId).classList.add('active');
+  if (button) button.classList.add('active');
+
+  sessionStorage.setItem('activeTab', tabId);
+
+  if (tabId === 'recommend') {
+    filterRecommendations();
+  }
+}
+
+    function normalizeTrait(item) {
+      const name = String(item.trait_name || item.name || '').trim();
+      const grade = String(item.grade || '').trim();
+      const short_desc = String(item.short_desc || '').trim();
+      const search_group = String(item.search_group || '').trim();
+      const sort_order = Number(item.sort_order ?? 999999);
+      const description = String(item.description || '').trim();
+
+      const displayText = short_desc
+        ? `${name} (${grade}) - ${short_desc}`
+        : `${name} (${grade})`;
+
+      return {
+        name,
+        grade,
+        short_desc,
+        search_group,
+        sort_order,
+        description,
+        display_text: displayText
+      };
+    }
+
+    function getTraitKey(item) {
+      return `${item.name}__${item.grade}`;
+    }
+
+    function escapeHtml(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function renderSelectedTraits() {
+      const box = document.getElementById('selectedTraitsBox');
+
+      if (selectedTraits.length === 0) {
+        box.innerHTML = '<span class="placeholder-text">아직 선택한 특성이 없습니다 (최대 4개)</span>';
+        return;
+      }
+
+      box.innerHTML = selectedTraits.map((trait, index) => `
+        <div class="trait-chip tooltip-target">
+          <span>${escapeHtml(trait.name)} (${escapeHtml(trait.grade)})</span>
+          <button type="button" onclick="event.stopPropagation(); removeTrait(${index})">×</button>
+          <div class="rich-tooltip">${escapeHtml(trait.description || '설명이 없습니다.')}</div>
+        </div>
+      `).join('');
+
+      bindRichTooltips();
+    }
+
+    function removeTrait(index) {
+      selectedTraits.splice(index, 1);
+      renderSelectedTraits();
+      renderDropdown(document.getElementById('traitSearch').value.trim());
+    }
+
+    function renderDropdown(keyword = '') {
+      const list = document.getElementById('dropdownList');
+      const lowerKeyword = String(keyword || '').toLowerCase().trim();
+
+      if (!TRAITS.length) {
+        list.innerHTML = '<div class="dropdown-item disabled">특성 목록을 불러오는 중입니다...</div>';
+        list.classList.remove('show');
+        return;
+      }
+
+      if (!lowerKeyword) {
+        list.innerHTML = '';
+        list.classList.remove('show');
+        return;
+      }
+
+      const filtered = TRAITS.filter(trait => {
+        return (
+          String(trait.name || '').toLowerCase().includes(lowerKeyword) ||
+          String(trait.search_group || '').toLowerCase().includes(lowerKeyword) ||
+          String(trait.description || '').toLowerCase().includes(lowerKeyword) ||
+          String(trait.short_desc || '').toLowerCase().includes(lowerKeyword)
+        );
+      }).sort((a, b) => {
+        if ((a.sort_order ?? 999999) !== (b.sort_order ?? 999999)) {
+          return (a.sort_order ?? 999999) - (b.sort_order ?? 999999);
+        }
+        return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
+      });
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="dropdown-item disabled">검색 결과가 없습니다</div>';
+        list.classList.add('show');
+        return;
+      }
+
+      list.innerHTML = filtered.map(trait => {
+        const key = getTraitKey(trait);
+        const alreadySelected = selectedTraits.some(item => getTraitKey(item) === key);
+
+        const displayText =
+          `${String(trait.name || '').trim()} (${String(trait.grade || '').trim()})` +
+          `${String(trait.short_desc || '').trim() ? ' - ' + String(trait.short_desc || '').trim() : ''}`;
+
+        if (alreadySelected) {
+          return `
+            <div class="dropdown-item disabled tooltip-target">
+              ${escapeHtml(displayText)} - 이미 선택됨
+              <div class="rich-tooltip">${escapeHtml(trait.description || '설명이 없습니다.')}</div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="dropdown-item tooltip-target" data-name="${escapeHtml(trait.name)}" data-grade="${escapeHtml(trait.grade)}">
+            ${escapeHtml(displayText)}
+            <div class="rich-tooltip">${escapeHtml(trait.description || '설명이 없습니다.')}</div>
+          </div>
+        `;
+      }).join('');
+
+      list.classList.add('show');
+
+      list.querySelectorAll('.dropdown-item:not(.disabled)').forEach(item => {
+        item.addEventListener('click', () => {
+          if (item.dataset.longPressTriggered === 'true') {
+            item.dataset.longPressTriggered = 'false';
+            return;
+          }
+          selectTrait(item.dataset.name, item.dataset.grade);
+        });
+      });
+
+      bindRichTooltips();
+    }
+
+    function selectTrait(traitName, traitGrade) {
+      if (selectedTraits.length >= 4) return;
+
+      const found = TRAITS.find(trait => trait.name === traitName && trait.grade === traitGrade);
+      if (!found) return;
+
+      const alreadySelected = selectedTraits.some(item =>
+        item.name === found.name && item.grade === found.grade
+      );
+      if (alreadySelected) return;
+
+      selectedTraits.push(found);
+      renderSelectedTraits();
+
+      const currentKeyword = document.getElementById('traitSearch').value.trim();
+      renderDropdown(currentKeyword);
+      document.getElementById('traitSearch').focus();
+    }
+
+    async function loadTraits() {
+      const list = document.getElementById('dropdownList');
+      list.innerHTML = '<div class="dropdown-item disabled">특성 목록을 불러오는 중입니다...</div>';
+
+      try {
+        const res = await fetch(`${APPS_SCRIPT_URL}?action=traits`);
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const rawData = await res.json();
+
+        TRAITS = rawData
+          .map(normalizeTrait)
+          .filter(item => item.name && item.grade);
+
+        renderDropdown('');
+        list.classList.remove('show');
+      } catch (e) {
+        console.error('특성 목록 로드 실패:', e);
+        list.innerHTML = '<div class="dropdown-item disabled">특성 목록을 불러오지 못했습니다</div>';
+        list.classList.remove('show');
+      }
+    }
+
+    async function loadRecommendations() {
+      const warningBox = document.getElementById('recommendWarnings');
+      const resultBox = document.getElementById('recommendResults');
+
+      warningBox.innerHTML = '';
+      resultBox.innerHTML = '<div class="empty-box">추천 특성을 불러오는 중입니다...</div>';
+
+      try {
+        const res = await fetch(`${APPS_SCRIPT_URL}?action=recommend`);
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        if (data && data.error) {
+          resultBox.innerHTML = `<div class="empty-box">${escapeHtml(data.error)}</div>`;
+          return;
+        }
+
+        ALL_RECOMMENDATIONS = Array.isArray(data.recommendations) ? data.recommendations : [];
+        ALL_RECOMMEND_WARNINGS = Array.isArray(data.warnings) ? data.warnings : [];
+
+        filterRecommendations();
+      } catch (e) {
+        console.error('추천 특성 로드 실패:', e);
+        resultBox.innerHTML = '<div class="empty-box">추천 특성을 불러오지 못했습니다.</div>';
+      }
+    }
+
+    function filterRecommendations() {
+  const input = document.getElementById('recommendSearchInput');
+  const warningBox = document.getElementById('recommendWarnings');
+  const resultBox = document.getElementById('recommendResults');
+  const q = String(input?.value || '').trim().toLowerCase();
+
+  const allRecommendations = Array.isArray(ALL_RECOMMENDATIONS) ? ALL_RECOMMENDATIONS : [];
+
+  const filteredRecommendations = !q
+    ? allRecommendations
+    : allRecommendations.filter(item => {
+        const haystack = [
+          item.build_type || '',
+          item.set_name || '',
+          item.note || '',
+          ...(item.palmons || []),
+          ...((item.traits || []).map(t =>
+            `${t.trait_name || ''} ${t.grade || ''} ${t.description || ''} ${t.short_desc || ''}`
+          ))
+        ].join(' ').toLowerCase();
+
+        return haystack.includes(q);
+      });
+
+  warningBox.innerHTML = '';
+
+  if (!filteredRecommendations.length) {
+    resultBox.innerHTML = '<div class="empty-box">표시할 추천 특성이 없습니다.</div>';
+    return;
+  }
+
+  resultBox.innerHTML = filteredRecommendations.map(item => `
+    <div class="result">
+      <div class="owner-name">${escapeHtml(item.build_type || '-')}</div>
+
+      <div class="trait-line" style="margin-top:10px;">
+        ${(item.traits || []).length
+          ? item.traits.map(t => `
+              <span class="small-chip tooltip-target">
+                ${escapeHtml(t.trait_name || '')}${t.grade ? ` (${escapeHtml(t.grade)})` : ''}
+                <span class="rich-tooltip">${escapeHtml(t.description || t.short_desc || '설명이 없습니다.')}</span>
+              </span>
+            `).join('')
+          : '<span class="owner-sub">등록된 특성이 없습니다.</span>'
+        }
+      </div>
+
+      <details class="detail-toggle">
+        <summary>자세히 보기</summary>
+        <div class="detail-content">
+          <div class="detail-row"><strong>노트:</strong> ${escapeHtml(item.note || '-')}</div>
+          <div class="detail-row"><strong>팰몬:</strong> ${escapeHtml((item.palmons || []).join(', ') || '-')}</div>
+        </div>
+      </details>
+    </div>
+  `).join('');
+
+  bindRichTooltips();
+}
+
+    async function applyAliasCode() {
+      const aliasInput = document.getElementById('aliasInput');
+      const alias = aliasInput.value.trim();
+      const messageBox = document.getElementById('saveMessage');
+
+      if (!alias) {
+        messageBox.textContent = '약칭을 입력해 주세요.';
+        messageBox.style.color = '#dc3545';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${APPS_SCRIPT_URL}?action=alias&q=${encodeURIComponent(alias)}`);
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`HTTP ${res.status} - ${errorText}`);
+        }
+
+        const data = await res.json();
+
+        if (data && data.error) {
+          messageBox.textContent = `약칭 오류: ${data.error}`;
+          messageBox.style.color = '#dc3545';
+          return;
+        }
+
+        if (!data || !data.traits || !data.traits.length) {
+          messageBox.textContent = '등록된 약칭을 찾지 못했습니다.';
+          messageBox.style.color = '#dc3545';
+          return;
+        }
+
+        const mapped = data.traits.map(t =>
+          TRAITS.find(item => item.name === t.name && item.grade === t.grade)
+        ).filter(Boolean);
+
+        if (!mapped.length) {
+          messageBox.textContent = '약칭은 찾았지만 TraitsMaster와 일치하는 특성이 없습니다.';
+          messageBox.style.color = '#dc3545';
+          return;
+        }
+
+        selectedTraits = mapped.slice(0, 4);
+        renderSelectedTraits();
+
+        messageBox.textContent = `✅ 약칭 ${alias} 적용 완료`;
+        messageBox.style.color = '#198754';
+        aliasInput.focus();
+      } catch (e) {
+        console.error(e);
+        messageBox.textContent = `약칭 적용 오류: ${e.message}`;
+        messageBox.style.color = '#dc3545';
+      }
+    }
+
+    async function savePalmon() {
+      const owner = document.getElementById('owner').value.trim();
+      const messageBox = document.getElementById('saveMessage');
+
+      messageBox.textContent = '';
+      messageBox.style.color = '#666';
+
+      if (!owner) {
+        messageBox.textContent = '이름을 입력해 주세요.';
+        messageBox.style.color = '#dc3545';
+        return;
+      }
+
+      if (selectedTraits.length === 0) {
+        messageBox.textContent = '특성을 최소 1개 이상 선택해 주세요.';
+        messageBox.style.color = '#dc3545';
+        return;
+      }
+
+      const payload = {
+        owner_name: owner,
+        trait1: selectedTraits[0]?.name || '',
+        trait1_grade: selectedTraits[0]?.grade || '',
+        trait2: selectedTraits[1]?.name || '',
+        trait2_grade: selectedTraits[1]?.grade || '',
+        trait3: selectedTraits[2]?.name || '',
+        trait3_grade: selectedTraits[2]?.grade || '',
+        trait4: selectedTraits[3]?.name || '',
+        trait4_grade: selectedTraits[3]?.grade || ''
+      };
+
+      try {
+        const res = await fetch(`${APPS_SCRIPT_URL}?action=save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          messageBox.textContent = '✅ 등록 완료되었습니다.';
+          messageBox.style.color = '#198754';
+
+          document.getElementById('owner').value = '';
+          selectedTraits = [];
+          renderSelectedTraits();
+          renderDropdown(document.getElementById('traitSearch').value.trim());
+        } else {
+          messageBox.textContent = data.error || '저장에 실패했습니다.';
+          messageBox.style.color = '#dc3545';
+        }
+      } catch (e) {
+        console.error(e);
+        messageBox.textContent = '등록 중 오류가 발생했습니다.';
+        messageBox.style.color = '#dc3545';
+      }
+    }
+
+    async function searchPalmon() {
+      const q = document.getElementById('searchInput').value.trim();
+      const resultsDiv = document.getElementById('results');
+
+      if (!q) {
+        resultsDiv.innerHTML = '<div class="form-section"><div class="empty-box">검색어를 입력해 주세요.</div></div>';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${APPS_SCRIPT_URL}?action=search&q=${encodeURIComponent(q)}`);
+        const results = await res.json();
+
+        if (!results.length) {
+          resultsDiv.innerHTML = '<div class="form-section"><div class="empty-box">검색 결과가 없습니다.</div></div>';
+          return;
+        }
+
+        resultsDiv.innerHTML = results.map((p) => {
+          const traits = [
+            p.trait1 && { label: `${p.trait1} (${p.trait1_grade})`, description: p.trait1_description || '' },
+            p.trait2 && { label: `${p.trait2} (${p.trait2_grade})`, description: p.trait2_description || '' },
+            p.trait3 && { label: `${p.trait3} (${p.trait3_grade})`, description: p.trait3_description || '' },
+            p.trait4 && { label: `${p.trait4} (${p.trait4_grade})`, description: p.trait4_description || '' }
+          ].filter(Boolean);
+
+          return `
+            <div class="result">
+              <div class="result-header">
+                <div>
+                  <div class="owner-name">${escapeHtml(p.owner_name)}</div>
+                  <div class="owner-sub">ID: ${escapeHtml(p.pal_id)}</div>
+                </div>
+                <button class="icon-action"
+                  onclick='openRequestTab(${JSON.stringify({
+                    pal_id: p.pal_id,
+                    owner_name: p.owner_name,
+                    request_type: "수정"
+                  })})'
+                  title="수정/삭제/오류 제보">
+                  ⚑
+                </button>
+              </div>
+
+              <div class="trait-line">
+                ${traits.map(t => `
+                  <span class="small-chip tooltip-target">
+                    ${escapeHtml(t.label)}
+                    <span class="rich-tooltip">${escapeHtml(t.description || '설명이 없습니다.')}</span>
+                  </span>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        bindRichTooltips();
+      } catch (e) {
+        console.error(e);
+        resultsDiv.innerHTML = '<div class="form-section"><div class="empty-box">검색 중 오류가 발생했습니다.</div></div>';
+      }
+    }
+
+    function openRequestTab(data) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+
+      document.getElementById('request').classList.add('active');
+
+      const requestTabButton = Array.from(document.querySelectorAll('.tab-button'))
+        .find(btn => btn.textContent.includes('수정 요청창'));
+
+      if (requestTabButton) {
+        requestTabButton.classList.add('active');
+      }
+
+      document.getElementById('requestName').value = data.owner_name || '';
+      document.getElementById('requestPalId').value = data.pal_id || '';
+      document.getElementById('requestType').value = data.request_type || '수정';
+
+      document.getElementById('requestSection').scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+
+    async function submitGlobalRequest() {
+      const person_name = document.getElementById('requestName').value.trim();
+      const request_type = document.getElementById('requestType').value;
+      const pal_id = document.getElementById('requestPalId').value.trim();
+      const message = document.getElementById('requestMessage').value.trim();
+      const resultBox = document.getElementById('requestResult');
+
+      resultBox.textContent = '';
+      resultBox.style.color = '#666';
+
+      if (!person_name) {
+        resultBox.textContent = '요청자 이름을 입력해 주세요.';
+        resultBox.style.color = '#dc3545';
+        return;
+      }
+
+      if (!request_type) {
+        resultBox.textContent = '요청 종류를 선택해 주세요.';
+        resultBox.style.color = '#dc3545';
+        return;
+      }
+
+      if (!pal_id) {
+        resultBox.textContent = '대상 팰몬 ID를 입력해 주세요.';
+        resultBox.style.color = '#dc3545';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${APPS_SCRIPT_URL}?action=request`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            person_name,
+            request_type,
+            pal_id,
+            message
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          resultBox.textContent = '✅ 요청이 접수되었습니다.';
+          resultBox.style.color = '#198754';
+          document.getElementById('requestMessage').value = '';
+        } else {
+          resultBox.textContent = data.error || '요청 접수에 실패했습니다.';
+          resultBox.style.color = '#dc3545';
+        }
+      } catch (e) {
+        console.error(e);
+        resultBox.textContent = '요청 접수 중 오류가 발생했습니다.';
+        resultBox.style.color = '#dc3545';
+      }
+    }
+
+    function bindRichTooltips() {
+      document.querySelectorAll('.tooltip-target').forEach(el => {
+        const tooltip = el.querySelector('.rich-tooltip');
+        if (!tooltip) return;
+
+        let pressTimer = null;
+
+        const showTooltip = (e) => {
+          if (e) e.stopPropagation();
+          document.querySelectorAll('.rich-tooltip').forEach(t => {
+            if (t !== tooltip) t.style.display = 'none';
+          });
+          tooltip.style.display = 'block';
+        };
+
+        const hideTooltip = () => {
+          tooltip.style.display = 'none';
+        };
+
+        el.addEventListener('mouseenter', showTooltip);
+        el.addEventListener('mouseleave', hideTooltip);
+
+        el.addEventListener('click', (e) => {
+          if (el.classList.contains('dropdown-item') && !el.classList.contains('disabled')) {
+            return;
+          }
+          e.stopPropagation();
+          const isOpen = tooltip.style.display === 'block';
+          document.querySelectorAll('.rich-tooltip').forEach(t => t.style.display = 'none');
+          tooltip.style.display = isOpen ? 'none' : 'block';
+        });
+
+        el.addEventListener('touchstart', () => {
+          pressTimer = setTimeout(() => {
+            el.dataset.longPressTriggered = 'true';
+            showTooltip();
+          }, 450);
+        }, { passive: true });
+
+        ['touchend', 'touchmove', 'touchcancel'].forEach(eventName => {
+          el.addEventListener(eventName, () => {
+            clearTimeout(pressTimer);
+          }, { passive: true });
+        });
+      });
+    }
+
+    function restoreActiveTab() {
+  const savedTab = sessionStorage.getItem('activeTab') || 'register';
+  const targetTab = document.getElementById(savedTab);
+
+  const targetButton = Array.from(document.querySelectorAll('.tab-button')).find(btn => {
+    if (savedTab === 'register') return btn.textContent.includes('특성 등록창');
+    if (savedTab === 'search') return btn.textContent.includes('특성 검색창');
+    if (savedTab === 'request') return btn.textContent.includes('수정 요청창');
+    if (savedTab === 'recommend') return btn.textContent.includes('추천 특성창');
+    return false;
+  });
+
+  if (targetTab && targetButton) {
+    showTab(savedTab, targetButton);
+  }
+}
+
+    const traitSearchInput = document.getElementById('traitSearch');
+    const traitSearchClear = document.getElementById('traitSearchClear');
+    const aliasInput = document.getElementById('aliasInput');
+    const aliasClearBtn = document.getElementById('aliasClearBtn');
+    const dropdownList = document.getElementById('dropdownList');
+    const recommendSearchInput = document.getElementById('recommendSearchInput');
+
+    function updateClearButtons() {
+      traitSearchClear.style.display = traitSearchInput.value.trim() ? 'block' : 'none';
+      aliasClearBtn.style.display = aliasInput.value.trim() ? 'block' : 'none';
+    }
+
+    traitSearchInput.addEventListener('focus', () => {
+      renderDropdown(traitSearchInput.value.trim());
+      updateClearButtons();
+    });
+
+    traitSearchInput.addEventListener('input', () => {
+      renderDropdown(traitSearchInput.value.trim());
+      updateClearButtons();
+    });
+
+    traitSearchInput.addEventListener('click', () => {
+      renderDropdown(traitSearchInput.value.trim());
+      updateClearButtons();
+    });
+
+    traitSearchClear.addEventListener('click', () => {
+      traitSearchInput.value = '';
+      updateClearButtons();
+      renderDropdown('');
+      traitSearchInput.focus();
+    });
+
+    aliasInput.addEventListener('input', updateClearButtons);
+
+    aliasClearBtn.addEventListener('click', () => {
+      aliasInput.value = '';
+      updateClearButtons();
+      aliasInput.focus();
+    });
+
+    recommendSearchInput.addEventListener('input', filterRecommendations);
+
+    document.addEventListener('click', (e) => {
+      const wrapper = document.querySelector('.dropdown-wrapper');
+      if (wrapper && !wrapper.contains(e.target)) {
+        dropdownList.classList.remove('show');
+      }
+      document.querySelectorAll('.rich-tooltip').forEach(t => t.style.display = 'none');
+    });
+
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') searchPalmon();
+    });
+
+    renderSelectedTraits();
+    loadTraits();
+    loadRecommendations();
+    updateClearButtons();
+    restoreActiveTab();
+  </script>
+</body>
+</html>
