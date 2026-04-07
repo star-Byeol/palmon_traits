@@ -3,7 +3,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyyXIeGk2JtDqdky9I6VTwGpMmbq1PteS99Cn58sw9J5j0zOhMfio33M8CdFCUtm8p5/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyds290Gx8srCyXyWysURoZnuDHmaLerXsva5_-8F47kOvJYj0j-b9TCjdfBlwHOM5M/exec';
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
