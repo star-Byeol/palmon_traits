@@ -467,7 +467,7 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = '://script.google.com/macros/s/AKfycbyyXIeGk2JtDqdky9I6VTwGpMmbq1PteS99Cn58sw9J5j0zOhMfio33M8CdFCUtm8p5/https://script.google.com/macros/s/AKfycbyyXIeGk2JtDqdky9I6VTwGpMmbq1PteS99Cn58sw9J5j0zOhMfio33M8CdFCUtm8p5/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyyXIeGk2JtDqdky9I6VTwGpMmbq1PteS99Cn58sw9J5j0zOhMfio33M8CdFCUtm8p5/https://script.google.com/macros/s/AKfycbyyXIeGk2JtDqdky9I6VTwGpMmbq1PteS99Cn58sw9J5j0zOhMfio33M8CdFCUtm8p5/exec';
 
     let TRAITS = [];
     let selectedTraits = [];
@@ -774,7 +774,7 @@
 
       try {
         const res = await fetch(`${APPS_SCRIPT_URL}?action=alias&q=${encodeURIComponent(alias)}`);
-        
+
         if (!res.ok) {
           const errorText = await res.text();
           throw new Error(`HTTP ${res.status} - ${errorText}`);
