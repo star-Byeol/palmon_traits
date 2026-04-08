@@ -112,34 +112,36 @@
       cursor: pointer;
     }
 
-    .alias-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
+    .alias-button,
+    .search-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
 
-.alias-button:disabled {
-  opacity: 0.8;
-  cursor: not-allowed;
-}
+    .alias-button:disabled,
+    .search-button:disabled {
+      opacity: 0.8;
+      cursor: not-allowed;
+    }
 
-.alias-button.loading .btn-label::before {
-  content: "";
-  width: 14px;
-  height: 14px;
-  border: 2px solid rgba(255,255,255,0.35);
-  border-top-color: white;
-  border-radius: 50%;
-  display: inline-block;
-  vertical-align: -2px;
-  margin-right: 8px;
-  animation: spin 0.8s linear infinite;
-}
+    .alias-button.loading .btn-label::before,
+    .search-button.loading::before {
+      content: "";
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.35);
+      border-top-color: white;
+      border-radius: 50%;
+      display: inline-block;
+      vertical-align: -2px;
+      animation: spin 0.8s linear infinite;
+    }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
 
     .save-button { background: linear-gradient(45deg, #28a745, #20c997); }
     .search-button { background: linear-gradient(45deg, #007bff, #0056b3); }
@@ -306,6 +308,21 @@
       gap: 8px;
     }
 
+    .match-badge {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .match-badge.perfect { background: #fef3c7; color: #92400e; }
+    .match-badge.exact { background: #dbeafe; color: #1e40af; }
+    .match-badge.high { background: #ecfdf5; color: #166534; }
+    .match-badge.partial { background: #fef2f2; color: #dc2626; }
+
     .small-chip {
       background: #eef2ff;
       color: #4f46e5;
@@ -409,7 +426,7 @@
           <input id="aliasInput" type="search" placeholder="예: 방방체체, 공치치치, 나무" autocomplete="off">
           <button type="button" id="aliasClearBtn" class="input-clear-btn" aria-label="약칭 입력 지우기">×</button>
         </div>
-        <button class="alias-button" type="button" id="aliasBtn" onclick="applyAliasCode()"> 
+        <button class="alias-button" type="button" id="aliasBtn" onclick="applyAliasCode()">
           <span class="btn-label">⚡ 약칭 적용</span>
         </button>
 
@@ -440,9 +457,10 @@
       <div class="form-section">
         <div class="section-title">🔍 특성 검색창</div>
         <label class="field-label" for="searchInput">검색할 특성</label>
-        <input id="searchInput" placeholder="예: 용맹한 마음, 방방체체">
-        <div class="helper-text">쉼표(,)로 여러 개 검색 가능</div>
-        <button class="search-button" onclick="searchPalmon()">🔍 검색하기</button>
+        <input id="searchInput" placeholder="예: 용맹한 마음, 방방체체, 치료">
+        <div class="helper-text">쉼표(,)로 여러 개 검색 가능합니다.</div>
+        <div class="helper-text">이 창을 열었을 때 아무 특성도 보이지 않는다면 검색하기 버튼을 한 번 눌러주세요.</div>
+        <button class="search-button" id="searchBtn" onclick="searchPalmon()">🔍 검색하기</button>
       </div>
 
       <div id="results"></div>
@@ -499,25 +517,26 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby8NIBj5G1-wRPbiIbzMYOFFR1eUWuhcAQnQg2J7fCEaJc_zrGu9Uxy2CnKcZOzaX0O/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxwi6bEuLqkdB2Q7u6JM429LqfOKH4V_J5nvRdIgbLlIMPRlvWjzdfqfbYP4KcVUJ6u/exec';
     let TRAITS = [];
     let selectedTraits = [];
     let ALL_RECOMMENDATIONS = [];
     let ALL_RECOMMEND_WARNINGS = [];
+    let activeTabMemory = 'register';
 
     function showTab(tabId, button) {
-  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-  document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
 
-  document.getElementById(tabId).classList.add('active');
-  if (button) button.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+      if (button) button.classList.add('active');
 
-  sessionStorage.setItem('activeTab', tabId);
+      activeTabMemory = tabId;
 
-  if (tabId === 'recommend') {
-    filterRecommendations();
-  }
-}
+      if (tabId === 'recommend') {
+        filterRecommendations();
+      }
+    }
 
     function normalizeTrait(item) {
       const name = String(item.trait_name || item.name || '').trim();
@@ -553,6 +572,14 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+    }
+
+    function getBadgeClass(label) {
+      if (label.includes('완벽')) return 'perfect';
+      if (label.includes('정확')) return 'exact';
+      if (label.includes('높은')) return 'high';
+      if (label.includes('부분')) return 'partial';
+      return 'partial';
     }
 
     function renderSelectedTraits() {
@@ -681,10 +708,7 @@
 
       try {
         const res = await fetch(`${APPS_SCRIPT_URL}?action=traits`);
-
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const rawData = await res.json();
 
@@ -710,10 +734,7 @@
 
       try {
         const res = await fetch(`${APPS_SCRIPT_URL}?action=recommend`);
-
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
 
@@ -733,153 +754,150 @@
     }
 
     function filterRecommendations() {
-  const input = document.getElementById('recommendSearchInput');
-  const warningBox = document.getElementById('recommendWarnings');
-  const resultBox = document.getElementById('recommendResults');
-  const q = String(input?.value || '').trim().toLowerCase();
+      const input = document.getElementById('recommendSearchInput');
+      const warningBox = document.getElementById('recommendWarnings');
+      const resultBox = document.getElementById('recommendResults');
+      const q = String(input?.value || '').trim().toLowerCase();
 
-  const allRecommendations = Array.isArray(ALL_RECOMMENDATIONS) ? ALL_RECOMMENDATIONS : [];
+      const allRecommendations = Array.isArray(ALL_RECOMMENDATIONS) ? ALL_RECOMMENDATIONS : [];
 
-  const filteredRecommendations = !q
-    ? allRecommendations
-    : allRecommendations.filter(item => {
-        const haystack = [
-          item.build_type || '',
-          item.set_name || '',
-          item.note || '',
-          ...(item.palmons || []),
-          ...((item.traits || []).map(t =>
-            `${t.trait_name || ''} ${t.grade || ''} ${t.description || ''} ${t.short_desc || ''}`
-          ))
-        ].join(' ').toLowerCase();
+      const filteredRecommendations = !q
+        ? allRecommendations
+        : allRecommendations.filter(item => {
+            const haystack = [
+              item.build_type || '',
+              item.set_name || '',
+              item.note || '',
+              ...(item.palmons || []),
+              ...((item.traits || []).map(t =>
+                `${t.trait_name || ''} ${t.grade || ''} ${t.description || ''} ${t.short_desc || ''}`
+              ))
+            ].join(' ').toLowerCase();
 
-        return haystack.includes(q);
-      });
+            return haystack.includes(q);
+          });
 
-  warningBox.innerHTML = '';
+      warningBox.innerHTML = '';
 
-  if (!filteredRecommendations.length) {
-    resultBox.innerHTML = '<div class="empty-box">표시할 추천 특성이 없습니다.</div>';
-    return;
-  }
+      if (!filteredRecommendations.length) {
+        resultBox.innerHTML = '<div class="empty-box">표시할 추천 특성이 없습니다.</div>';
+        return;
+      }
 
-  resultBox.innerHTML = filteredRecommendations.map(item => `
-    <div class="result">
-      <div class="owner-name">${escapeHtml(item.build_type || '-')}</div>
+      resultBox.innerHTML = filteredRecommendations.map(item => `
+        <div class="result">
+          <div class="owner-name">${escapeHtml(item.build_type || '-')}</div>
 
-      <div class="trait-line" style="margin-top:10px;">
-        ${(item.traits || []).length
-          ? item.traits.map(t => `
-              <span class="small-chip tooltip-target">
-                ${escapeHtml(t.trait_name || '')}${t.grade ? ` (${escapeHtml(t.grade)})` : ''}
-                <span class="rich-tooltip">${escapeHtml(t.description || t.short_desc || '설명이 없습니다.')}</span>
-              </span>
-            `).join('')
-          : '<span class="owner-sub">등록된 특성이 없습니다.</span>'
-        }
-      </div>
+          <div class="trait-line" style="margin-top:10px;">
+            ${(item.traits || []).length
+              ? item.traits.map(t => `
+                  <span class="small-chip tooltip-target">
+                    ${escapeHtml(t.trait_name || '')}${t.grade ? ` (${escapeHtml(t.grade)})` : ''}
+                    <span class="rich-tooltip">${escapeHtml(t.description || t.short_desc || '설명이 없습니다.')}</span>
+                  </span>
+                `).join('')
+              : '<span class="owner-sub">등록된 특성이 없습니다.</span>'
+            }
+          </div>
 
-      <details class="detail-toggle">
-        <summary>자세히 보기</summary>
-        <div class="detail-content">
-          <div class="detail-row"><strong>노트:</strong> ${escapeHtml(item.note || '-')}</div>
-          <div class="detail-row"><strong>팰몬:</strong> ${escapeHtml((item.palmons || []).join(', ') || '-')}</div>
+          <details class="detail-toggle">
+            <summary>자세히 보기</summary>
+            <div class="detail-content">
+              <div class="detail-row"><strong>노트:</strong> ${escapeHtml(item.note || '-')}</div>
+              <div class="detail-row"><strong>팰몬:</strong> ${escapeHtml((item.palmons || []).join(', ') || '-')}</div>
+            </div>
+          </details>
         </div>
-      </details>
-    </div>
-  `).join('');
+      `).join('');
 
-  bindRichTooltips();
-}
+      bindRichTooltips();
+    }
 
     async function applyAliasCode() {
-  const aliasInput = document.getElementById('aliasInput');
-  const alias = aliasInput.value.trim();
-  const messageBox = document.getElementById('saveMessage');
-  const aliasBtn = document.getElementById('aliasBtn');
-  const aliasBtnLabel = aliasBtn?.querySelector('.btn-label');
+      const aliasInput = document.getElementById('aliasInput');
+      const alias = aliasInput.value.trim();
+      const messageBox = document.getElementById('saveMessage');
+      const aliasBtn = document.getElementById('aliasBtn');
+      const aliasBtnLabel = aliasBtn?.querySelector('.btn-label');
 
-  if (!alias) {
-    messageBox.textContent = '약칭을 입력해 주세요.';
-    messageBox.style.color = '#dc3545';
-    return;
-  }
+      if (!alias) {
+        messageBox.textContent = '약칭을 입력해 주세요.';
+        messageBox.style.color = '#dc3545';
+        return;
+      }
 
-  if (aliasBtn) {
-    aliasBtn.disabled = true;
-    aliasBtn.classList.add('loading');
-  }
-  if (aliasBtnLabel) {
-    aliasBtnLabel.textContent = '적용 중...';
-  }
+      if (aliasBtn) {
+        aliasBtn.disabled = true;
+        aliasBtn.classList.add('loading');
+      }
+      if (aliasBtnLabel) {
+        aliasBtnLabel.textContent = '적용 중...';
+      }
 
-  try {
-    const res = await fetch(`${APPS_SCRIPT_URL}?action=alias&q=${encodeURIComponent(alias)}`);
+      try {
+        const res = await fetch(`${APPS_SCRIPT_URL}?action=alias&q=${encodeURIComponent(alias)}`);
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`HTTP ${res.status} - ${errorText}`);
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`HTTP ${res.status} - ${errorText}`);
+        }
+
+        const data = await res.json();
+
+        if (data && data.error) {
+          messageBox.textContent = `약칭 오류: ${data.error}`;
+          messageBox.style.color = '#dc3545';
+          return;
+        }
+
+        if (!data || !data.traits || !data.traits.length) {
+          messageBox.textContent = '등록된 약칭을 찾지 못했습니다.';
+          messageBox.style.color = '#dc3545';
+          return;
+        }
+
+        const mapped = data.traits.map(t => {
+          const targetName = String(t.name || '').trim().replace(/\s+/g, ' ');
+          const targetGrade = String(t.grade || '').trim();
+
+          return TRAITS.find(item =>
+            String(item.name || '').trim().replace(/\s+/g, ' ') === targetName &&
+            String(item.grade || '').trim() === targetGrade
+          );
+        }).filter(Boolean);
+
+        if (!mapped.length) {
+          messageBox.textContent = '약칭은 찾았지만 TraitsMaster와 일치하는 특성이 없습니다.';
+          messageBox.style.color = '#dc3545';
+          return;
+        }
+
+        selectedTraits = mapped.slice(0, 4);
+        renderSelectedTraits();
+
+        if (mapped.length < data.traits.length) {
+          messageBox.textContent = `⚠ 약칭 ${alias} 적용 완료 (${mapped.length}/${data.traits.length}개 매칭)`;
+          messageBox.style.color = '#fd7e14';
+        } else {
+          messageBox.textContent = `✅ 약칭 ${alias} 적용 완료`;
+          messageBox.style.color = '#198754';
+        }
+
+        aliasInput.focus();
+      } catch (e) {
+        console.error(e);
+        messageBox.textContent = `약칭 적용 오류: ${e.message}`;
+        messageBox.style.color = '#dc3545';
+      } finally {
+        if (aliasBtn) {
+          aliasBtn.disabled = false;
+          aliasBtn.classList.remove('loading');
+        }
+        if (aliasBtnLabel) {
+          aliasBtnLabel.textContent = '⚡ 약칭 적용';
+        }
+      }
     }
-
-    const data = await res.json();
-    console.log('aliasData:', data);
-
-    if (data && data.error) {
-      messageBox.textContent = `약칭 오류: ${data.error}`;
-      messageBox.style.color = '#dc3545';
-      return;
-    }
-
-    if (!data || !data.traits || !data.traits.length) {
-      messageBox.textContent = '등록된 약칭을 찾지 못했습니다.';
-      messageBox.style.color = '#dc3545';
-      return;
-    }
-
-    const mapped = data.traits.map(t => {
-      const targetName = String(t.name || '').trim().replace(/\s+/g, ' ');
-      const targetGrade = String(t.grade || '').trim();
-
-      return TRAITS.find(item =>
-        String(item.name || '').trim().replace(/\s+/g, ' ') === targetName &&
-        String(item.grade || '').trim() === targetGrade
-      );
-    }).filter(Boolean);
-
-    console.log('mapped:', mapped);
-
-    if (!mapped.length) {
-      messageBox.textContent = '약칭은 찾았지만 TraitsMaster와 일치하는 특성이 없습니다.';
-      messageBox.style.color = '#dc3545';
-      return;
-    }
-
-    selectedTraits = mapped.slice(0, 4);
-    renderSelectedTraits();
-
-    if (mapped.length < data.traits.length) {
-      messageBox.textContent = `⚠ 약칭 ${alias} 적용 완료 (${mapped.length}/${data.traits.length}개 매칭)`;
-      messageBox.style.color = '#fd7e14';
-    } else {
-      messageBox.textContent = `✅ 약칭 ${alias} 적용 완료`;
-      messageBox.style.color = '#198754';
-    }
-
-    aliasInput.focus();
-  } catch (e) {
-    console.error(e);
-    messageBox.textContent = `약칭 적용 오류: ${e.message}`;
-    messageBox.style.color = '#dc3545';
-  } finally {
-    if (aliasBtn) {
-      aliasBtn.disabled = false;
-      aliasBtn.classList.remove('loading');
-    }
-    if (aliasBtnLabel) {
-      aliasBtnLabel.textContent = '⚡ 약칭 적용';
-    }
-  }
-}
 
     async function savePalmon() {
       const owner = document.getElementById('owner').value.trim();
@@ -915,7 +933,7 @@
       try {
         const res = await fetch(`${APPS_SCRIPT_URL}?action=save`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
           body: JSON.stringify(payload)
         });
 
@@ -943,17 +961,24 @@
     async function searchPalmon() {
       const q = document.getElementById('searchInput').value.trim();
       const resultsDiv = document.getElementById('results');
+      const searchBtn = document.getElementById('searchBtn');
 
-      if (!q) {
-        resultsDiv.innerHTML = '<div class="form-section"><div class="empty-box">검색어를 입력해 주세요.</div></div>';
-        return;
+      if (searchBtn) {
+        searchBtn.disabled = true;
+        searchBtn.classList.add('loading');
+        searchBtn.textContent = q ? '검색중...' : '불러오는 중...';
       }
 
       try {
         const res = await fetch(`${APPS_SCRIPT_URL}?action=search&q=${encodeURIComponent(q)}`);
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`HTTP ${res.status} - ${errorText}`);
+        }
+
         const results = await res.json();
 
-        if (!results.length) {
+        if (!Array.isArray(results) || !results.length) {
           resultsDiv.innerHTML = '<div class="form-section"><div class="empty-box">검색 결과가 없습니다.</div></div>';
           return;
         }
@@ -971,8 +996,10 @@
               <div class="result-header">
                 <div>
                   <div class="owner-name">${escapeHtml(p.owner_name)}</div>
+                  ${p.match_label ? `<div class="match-badge ${getBadgeClass(p.match_label)}">${escapeHtml(p.match_label)}</div>` : ''}
                   <div class="owner-sub">ID: ${escapeHtml(p.pal_id)}</div>
                 </div>
+
                 <button class="icon-action"
                   onclick='openRequestTab(${JSON.stringify({
                     pal_id: p.pal_id,
@@ -985,12 +1012,15 @@
               </div>
 
               <div class="trait-line">
-                ${traits.map(t => `
-                  <span class="small-chip tooltip-target">
-                    ${escapeHtml(t.label)}
-                    <span class="rich-tooltip">${escapeHtml(t.description || '설명이 없습니다.')}</span>
-                  </span>
-                `).join('')}
+                ${traits.length
+                  ? traits.map(t => `
+                    <span class="small-chip tooltip-target">
+                      ${escapeHtml(t.label)}
+                      <span class="rich-tooltip">${escapeHtml(t.description || '설명이 없습니다.')}</span>
+                    </span>
+                  `).join('')
+                  : '<span class="owner-sub">등록된 특성이 없습니다.</span>'
+                }
               </div>
             </div>
           `;
@@ -1000,6 +1030,12 @@
       } catch (e) {
         console.error(e);
         resultsDiv.innerHTML = '<div class="form-section"><div class="empty-box">검색 중 오류가 발생했습니다.</div></div>';
+      } finally {
+        if (searchBtn) {
+          searchBtn.disabled = false;
+          searchBtn.classList.remove('loading');
+          searchBtn.textContent = '🔍 검색하기';
+        }
       }
     }
 
@@ -1015,6 +1051,8 @@
       if (requestTabButton) {
         requestTabButton.classList.add('active');
       }
+
+      activeTabMemory = 'request';
 
       document.getElementById('requestName').value = data.owner_name || '';
       document.getElementById('requestPalId').value = data.pal_id || '';
@@ -1131,21 +1169,21 @@
     }
 
     function restoreActiveTab() {
-  const savedTab = sessionStorage.getItem('activeTab') || 'register';
-  const targetTab = document.getElementById(savedTab);
+      const savedTab = activeTabMemory || 'register';
+      const targetTab = document.getElementById(savedTab);
 
-  const targetButton = Array.from(document.querySelectorAll('.tab-button')).find(btn => {
-    if (savedTab === 'register') return btn.textContent.includes('특성 등록창');
-    if (savedTab === 'search') return btn.textContent.includes('특성 검색창');
-    if (savedTab === 'request') return btn.textContent.includes('수정 요청창');
-    if (savedTab === 'recommend') return btn.textContent.includes('추천 특성창');
-    return false;
-  });
+      const targetButton = Array.from(document.querySelectorAll('.tab-button')).find(btn => {
+        if (savedTab === 'register') return btn.textContent.includes('특성 등록창');
+        if (savedTab === 'search') return btn.textContent.includes('특성 검색창');
+        if (savedTab === 'request') return btn.textContent.includes('수정 요청창');
+        if (savedTab === 'recommend') return btn.textContent.includes('추천 특성창');
+        return false;
+      });
 
-  if (targetTab && targetButton) {
-    showTab(savedTab, targetButton);
-  }
-}
+      if (targetTab && targetButton) {
+        showTab(savedTab, targetButton);
+      }
+    }
 
     const traitSearchInput = document.getElementById('traitSearch');
     const traitSearchClear = document.getElementById('traitSearchClear');
