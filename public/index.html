@@ -472,7 +472,7 @@
         
         <div class="helper-text">잘못 등록된 특성 삭제/수정 요청/건의/제보. peep의 귓말로 연락 주셔도 괜찮습니다.</div>
 
-        
+
         <label class="field-label" for="requestName">요청자 이름</label>
         <input id="requestName" placeholder="닉네임">
 
@@ -521,7 +521,7 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxwi6bEuLqkdB2Q7u6JM429LqfOKH4V_J5nvRdIgbLlIMPRlvWjzdfqfbYP4KcVUJ6u/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbywLfYa3YMQt4lWXdD25JJWlVHf3C5kBiqYgkwPlbMRtzzVjhfxSLlp88hB07nPK3Dr/exec';
     let TRAITS = [];
     let selectedTraits = [];
     let ALL_RECOMMENDATIONS = [];
@@ -1097,16 +1097,21 @@
       }
 
       try {
-        const res = await fetch(`${APPS_SCRIPT_URL}?action=request`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            person_name,
-            request_type,
-            pal_id,
-            message
-          })
-        });
+        const body = new URLSearchParams({
+  action: 'request',
+  person_name,
+  request_type,
+  pal_id,
+  message
+});
+
+const res = await fetch(APPS_SCRIPT_URL, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+  },
+  body: body.toString()
+});
 
         const data = await res.json();
 
