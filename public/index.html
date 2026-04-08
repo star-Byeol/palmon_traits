@@ -406,10 +406,10 @@
     <h1>🐾 팰몬 특성 등록</h1>
 
     <div class="nav-tabs">
-      <button class="tab-button active" onclick="showTab('register', this)">특성 등록창</button>
-      <button class="tab-button" onclick="showTab('search', this)">특성 검색창</button>
-      <button class="tab-button" onclick="showTab('request', this)">수정 요청창</button>
-      <button class="tab-button" onclick="showTab('recommend', this)">추천 특성창</button>
+      <button class="tab-button active" onclick="showTab('register', this)">특성 등록</button>
+      <button class="tab-button" onclick="showTab('search', this)">팰몬 찾기</button>
+      <button class="tab-button" onclick="showTab('request', this)">수정 요청</button>
+      <button class="tab-button" onclick="showTab('recommend', this)">추천</button>
     </div>
 
     <div id="register" class="tab-content active">
@@ -469,7 +469,10 @@
     <div id="request" class="tab-content">
       <div class="form-section" id="requestSection">
         <div class="section-title">📮 수정 요청창</div>
+        
+        <div class="helper-text">잘못 등록된 특성 삭제/수정 요청/건의/제보. peep의 귓말로 연락 주셔도 괜찮습니다.</div>
 
+        
         <label class="field-label" for="requestName">요청자 이름</label>
         <input id="requestName" placeholder="닉네임">
 
@@ -507,6 +510,7 @@
         <label class="field-label" for="recommendSearchInput">팰몬 / 타입 / 세트 검색</label>
         <input id="recommendSearchInput" type="search" placeholder="검색하기">
 
+        <div class="helper-text">본 추천의 출처는 옾챗방 '팰몬 서바이벌 모바일 정보방 수다방'과 고렙 분들의 조합입니다.</div>
         <div class="helper-text">팰몬 이름이나 타입 검색 가능합니다. 로딩이 오래 걸릴 수 있으니 양해 바랍니다.</div>
         <div class="helper-text">기본 표시는 타입 - 특성 형식이며, 자세히 보기에서 노트/팰몬을 확인할 수 있습니다.</div>
 
