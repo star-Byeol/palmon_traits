@@ -112,6 +112,35 @@
       cursor: pointer;
     }
 
+    .alias-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.alias-button:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.alias-button.loading .btn-label::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  display: inline-block;
+  vertical-align: -2px;
+  margin-right: 8px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
     .save-button { background: linear-gradient(45deg, #28a745, #20c997); }
     .search-button { background: linear-gradient(45deg, #007bff, #0056b3); }
     .request-button { background: linear-gradient(45deg, #ff7b54, #ff5c8a); }
@@ -380,7 +409,9 @@
           <input id="aliasInput" type="search" placeholder="예: 방방체체, 공치치치, 나무" autocomplete="off">
           <button type="button" id="aliasClearBtn" class="input-clear-btn" aria-label="약칭 입력 지우기">×</button>
         </div>
-        <button class="alias-button" type="button" onclick="applyAliasCode()">⚡ 약칭 적용</button>
+        <button class="alias-button" type="button" id="aliasBtn" onclick="applyAliasCode()"> 
+          <span class="btn-label">⚡ 약칭 적용</span>
+        </button>
 
         <div style="height: 16px;"></div>
 
@@ -762,62 +793,93 @@
 }
 
     async function applyAliasCode() {
-      const aliasInput = document.getElementById('aliasInput');
-      const alias = aliasInput.value.trim();
-      const messageBox = document.getElementById('saveMessage');
+  const aliasInput = document.getElementById('aliasInput');
+  const alias = aliasInput.value.trim();
+  const messageBox = document.getElementById('saveMessage');
+  const aliasBtn = document.getElementById('aliasBtn');
+  const aliasBtnLabel = aliasBtn?.querySelector('.btn-label');
 
-      if (!alias) {
-        messageBox.textContent = '약칭을 입력해 주세요.';
-        messageBox.style.color = '#dc3545';
-        return;
-      }
-      console.log('aliasData:', data);
-console.log('mapped:', mapped);
+  if (!alias) {
+    messageBox.textContent = '약칭을 입력해 주세요.';
+    messageBox.style.color = '#dc3545';
+    return;
+  }
 
-      try {
-        const res = await fetch(`${APPS_SCRIPT_URL}?action=alias&q=${encodeURIComponent(alias)}`);
+  if (aliasBtn) {
+    aliasBtn.disabled = true;
+    aliasBtn.classList.add('loading');
+  }
+  if (aliasBtnLabel) {
+    aliasBtnLabel.textContent = '적용 중...';
+  }
 
-        if (!res.ok) {
-          const errorText = await res.text();
-          throw new Error(`HTTP ${res.status} - ${errorText}`);
-        }
+  try {
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=alias&q=${encodeURIComponent(alias)}`);
 
-        const data = await res.json();
-
-        if (data && data.error) {
-          messageBox.textContent = `약칭 오류: ${data.error}`;
-          messageBox.style.color = '#dc3545';
-          return;
-        }
-
-        if (!data || !data.traits || !data.traits.length) {
-          messageBox.textContent = '등록된 약칭을 찾지 못했습니다.';
-          messageBox.style.color = '#dc3545';
-          return;
-        }
-
-        const mapped = data.traits.map(t =>
-          TRAITS.find(item => item.name === t.name && item.grade === t.grade)
-        ).filter(Boolean);
-
-        if (!mapped.length) {
-          messageBox.textContent = '약칭은 찾았지만 TraitsMaster와 일치하는 특성이 없습니다.';
-          messageBox.style.color = '#dc3545';
-          return;
-        }
-
-        selectedTraits = mapped.slice(0, 4);
-        renderSelectedTraits();
-
-        messageBox.textContent = `✅ 약칭 ${alias} 적용 완료`;
-        messageBox.style.color = '#198754';
-        aliasInput.focus();
-      } catch (e) {
-        console.error(e);
-        messageBox.textContent = `약칭 적용 오류: ${e.message}`;
-        messageBox.style.color = '#dc3545';
-      }
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`HTTP ${res.status} - ${errorText}`);
     }
+
+    const data = await res.json();
+    console.log('aliasData:', data);
+
+    if (data && data.error) {
+      messageBox.textContent = `약칭 오류: ${data.error}`;
+      messageBox.style.color = '#dc3545';
+      return;
+    }
+
+    if (!data || !data.traits || !data.traits.length) {
+      messageBox.textContent = '등록된 약칭을 찾지 못했습니다.';
+      messageBox.style.color = '#dc3545';
+      return;
+    }
+
+    const mapped = data.traits.map(t => {
+      const targetName = String(t.name || '').trim().replace(/\s+/g, ' ');
+      const targetGrade = String(t.grade || '').trim();
+
+      return TRAITS.find(item =>
+        String(item.name || '').trim().replace(/\s+/g, ' ') === targetName &&
+        String(item.grade || '').trim() === targetGrade
+      );
+    }).filter(Boolean);
+
+    console.log('mapped:', mapped);
+
+    if (!mapped.length) {
+      messageBox.textContent = '약칭은 찾았지만 TraitsMaster와 일치하는 특성이 없습니다.';
+      messageBox.style.color = '#dc3545';
+      return;
+    }
+
+    selectedTraits = mapped.slice(0, 4);
+    renderSelectedTraits();
+
+    if (mapped.length < data.traits.length) {
+      messageBox.textContent = `⚠ 약칭 ${alias} 적용 완료 (${mapped.length}/${data.traits.length}개 매칭)`;
+      messageBox.style.color = '#fd7e14';
+    } else {
+      messageBox.textContent = `✅ 약칭 ${alias} 적용 완료`;
+      messageBox.style.color = '#198754';
+    }
+
+    aliasInput.focus();
+  } catch (e) {
+    console.error(e);
+    messageBox.textContent = `약칭 적용 오류: ${e.message}`;
+    messageBox.style.color = '#dc3545';
+  } finally {
+    if (aliasBtn) {
+      aliasBtn.disabled = false;
+      aliasBtn.classList.remove('loading');
+    }
+    if (aliasBtnLabel) {
+      aliasBtnLabel.textContent = '⚡ 약칭 적용';
+    }
+  }
+}
 
     async function savePalmon() {
       const owner = document.getElementById('owner').value.trim();
